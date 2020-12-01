@@ -92,10 +92,6 @@ class PLAYER(gameObject):
     def __init__(self, scene, i, j):
         super().__init__('image/stage/PLAYER/Player_Idle1.png', scene, i, j, 'PLAYER')
 
-    # def move(self, i, j):
-    #     self.position = i, j
-    #     self.locate(self.scene, *getLocation(i, j))
-
     def kick(self):
         pass
 
@@ -121,10 +117,6 @@ class DESK(gameObject):
 class BOOKS(gameObject):
     def __init__(self, scene, i, j):
         super().__init__('image/stage/BOOKS/Book.png', scene, i, j, 'BOOKS')
-
-    # def move(self, i, j):
-    #     self.position = i, j
-    #     self.locate(self.scene, *getLocation(i, j))
     
     def destroy(self):
         self.hide()
@@ -147,7 +139,6 @@ def getLocation(i, j):
     return 350 + 65 * j, 560 - 65 * i
 
 class Stage(Scene):
-    # mapObjects = ['GROUND', 'WALL']
     # gameObjects = ['GROUND', 'WALL', 'PROFESSOR', 'KEY', 'DOOR', 'DESK', 'BOOKS', 'SPIKE_ACTIVE', 'SPIKE_INACTIVE', 'SPIKE_DESK']
     stageDetails = [
         {
@@ -224,7 +215,7 @@ class Stage(Scene):
             'objects': [],
             'player': PLAYER(self, 0, 0),
         }
-        self.setStage(4)
+        self.setStage(1)
 
     def setStage(self, n):
         for v in self.objects['clearScreen']:
@@ -239,7 +230,6 @@ class Stage(Scene):
             self.objects['player'].move(*s['player'])
             self.objects['player'].show()
             for i in range(len(self.objects['objects'])):
-                # v.hide()
                 del self.objects['objects'][0]
             self.objects['objects'] = []
             for i, v in enumerate(o):
@@ -397,4 +387,4 @@ stage = Stage()
 setGameOption(GameOption.ROOM_TITLE, False)
 setGameOption(GameOption.INVENTORY_BUTTON, False)
 setGameOption(GameOption.MESSAGE_BOX_BUTTON, False)
-startGame(stage)
+startGame(main)
