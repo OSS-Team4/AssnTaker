@@ -59,7 +59,7 @@ class button_help(button):
 
 class button_main(button):
     def __init__(self, scene):
-        super().__init__(scene, 'main', 0, 0)
+        super().__init__(scene, 'main', 460, 140)
 
     def onMouseAction(self, x, y, action):
         if action == MouseAction.CLICK:
@@ -172,6 +172,9 @@ _ = [button_start(main), button_help(main), button_exit(main)]
 helpScene = Scene('help', 'image/help/background.png')
 _ = button_back(helpScene)
 
+ending = Scene('ending', 'image/ending/background.png')
+_ = button_main(ending)
+
 # stage
 
 
@@ -261,6 +264,7 @@ class Stage(Scene):
     def setStage(self, n):
         for v in self.objects['clearScreen']:
             v.hide()
+        self.keyBlocked = False
         if len(self.stageDetails) > n:
             self.stageDetails[0]['currentStage'] = n
             self.stageMap = copy.deepcopy(
@@ -298,7 +302,11 @@ class Stage(Scene):
                         self.objects['objects'].append(SPIKE(self, i, j, True))
                         self.objects['objects'].append(DESK(self, i, j))
 
+        elif len(self.stageDetails) == n:
+            ending.enter()
+
     def cleared(self):
+        self.keyBlocked = True
         self.objects['player'].hide()
         for v in self.objects['objects']:
             v.hide()
@@ -307,7 +315,7 @@ class Stage(Scene):
             v.show()
 
     def failed(self):
-        print('failed')
+        self.objects['player'].fail()
         self.setStage(self.stageDetails[0]['currentStage'])
 
     def getObjectIndex(self, i, j, objectType):
@@ -417,7 +425,7 @@ class Stage(Scene):
             self.failed()
 
     def onKeyboard(self, key, pressed):
-        if pressed:
+        if pressed and not self.keyBlocked:
             if key == 23 or key == 84:
                 self.move(-1, 0)
             elif key == 1 or key == 82:
