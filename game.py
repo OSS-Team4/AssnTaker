@@ -2,13 +2,10 @@ from bangtal import *
 import copy
 
 # Objects
-
-
 class clearScreen(Object):
     def __init__(self, scene):
         super().__init__('image/stage/clear.png')
         self.locate(scene, 355, 138)
-
 
 class actionsRemained(Object):
     def __init__(self, scene, x, y=120):
@@ -29,7 +26,6 @@ class button(Object):
         self.show()
         self.scene = scene
 
-
 class button_back(button):
     def __init__(self, scene):
         super().__init__(scene, 'back', 700, 40)
@@ -37,7 +33,6 @@ class button_back(button):
     def onMouseAction(self, x, y, action):
         if action == MouseAction.CLICK:
             main.enter()
-
 
 class button_exit(button):
     def __init__(self, scene):
@@ -47,7 +42,6 @@ class button_exit(button):
         if action == MouseAction.CLICK:
             endGame()
 
-
 class button_help(button):
     def __init__(self, scene):
         super().__init__(scene, 'help', 460, 120)
@@ -55,7 +49,6 @@ class button_help(button):
     def onMouseAction(self, x, y, action):
         if action == MouseAction.CLICK:
             helpScene.enter()
-
 
 class button_main(button):
     def __init__(self, scene):
@@ -65,7 +58,6 @@ class button_main(button):
         if action == MouseAction.CLICK:
             main.enter()
 
-
 class button_next(button):
     def __init__(self, scene):
         super().__init__(scene, 'next', 460, 180)
@@ -73,7 +65,6 @@ class button_next(button):
     def onMouseAction(self, x, y, action):
         if action == MouseAction.CLICK:
             stage.setStage(stage.stageDetails[0]['currentStage'] + 1)
-
 
 class button_start(button):
     def __init__(self, scene):
@@ -96,56 +87,61 @@ class gameObject(Object):
         self.speed_animation = 0.15
 
     def move(self, i, j):
-        self.position = i, j
-        self.locate(self.scene, *getLocation(i, j))
-
+        self.position = i, j        
+        t = Timer(0.01)
+        def l():
+            self.locate(self.scene, *getLocation(*self.position))
+        t.onTimeout = l
+        t.start()
 
 class PLAYER(gameObject):
     def __init__(self, scene, i, j):
-        self.direction = ['Right', 'Left']
-        self.dir = 0
-        super().__init__('image/stage/PLAYER/Player_Idle1_' + self.get_direct() + '.png', scene, i, j, 'PLAYER')
+        super().__init__('image/stage/PLAYER/Player_Idle1_Right.png', scene, i, j, 'PLAYER')
+        self.direction = 'Right'
         self.animate()
 
     # animation code complete
     def animate(self):
-        timer = Timer(self.speed_animation)
+        self.mainTimer = Timer(self.speed_animation)
         self.src_count = 1
         def timer_timeout():
-            self.setImage('image/stage/PLAYER/Player_Idle'+str(self.src_count)+'_'+self.get_direct() + '.png')
+            self.setImage('image/stage/PLAYER/Player_Idle' + str(self.src_count) + '_' + self.direction + '.png')
             if self.src_count >= 3:
                 self.src_count = 1
             else:
                 self.src_count += 1
-            timer.set(self.speed_animation)
-            timer.start()
-        timer.onTimeout = timer_timeout
-        timer.start()
+            self.mainTimer.set(self.speed_animation)
+            self.mainTimer.start()
+        self.mainTimer.onTimeout = timer_timeout
+        self.mainTimer.start()
 
     # animation code ongoing (not complete)
-    def move(self, p_i, p_j, i, j, d):
+    def move(self, i, j):
+        if self.position[1] > j:
+            self.direction = 'Left'
+        elif self.position[1] < j:
+            self.direction = 'Right'
         super().move(i, j)
-        #print(self.position)
-        #print(getLocation(*self.position))
-        #print(getLocation(i, j))
-        self.set_direct(d)
-        print(p_i, p_j, i, j, self.direction[self.dir])
-
 
     # animation code ongoing
-    def kick(self):
-        timer = Timer(self.speed_animation-0.14)
+    def kick(self, i, j):
+        if self.position[1] > j:
+            self.direction = 'Left'
+        elif self.position[1] < j:
+            self.direction = 'Right'
+        timer = Timer(0)
         self.src_count_kick = 1
         def timer_timeout():
-            self.setImage('image/stage/PLAYER/Player_Kick'+str(self.src_count_kick)+'_'+self.get_direct() +'.png')
+            self.setImage('image/stage/PLAYER/Player_Kick' + str(self.src_count_kick) + '_' + self.direction + '.png')
             if self.src_count_kick >= 3:
-                self.src_count_kick = 1
-                self.setImage('image/stage/PLAYER/Player_Idle1_'+self.get_direct() +'.png')
+                self.setImage('image/stage/PLAYER/Player_Idle1_' + self.direction + '.png')
+                self.mainTimer.start()
             else:
                 self.src_count_kick += 1
                 timer.set(self.speed_animation)
                 timer.start()
         timer.onTimeout = timer_timeout
+        self.mainTimer.stop()
         timer.start()
 
     def fail(self):
@@ -154,45 +150,23 @@ class PLAYER(gameObject):
         timer = Timer(self.speed_animation)
         self.src_count_fail = 1
         def timer_timeout():
-            self.setImage('image/stage/PLAYER/Player_Over'+str(self.src_count)+'_'+self.get_direct() +'.png')
+            self.setImage('image/stage/PLAYER/Player_Over'+str(self.src_count) + '_' + self.direction + '.png')
             if self.src_count >= 5:
-                self.src_count = 1
-                return
+                self.mainTimer.start()
+                return 0
             else:
                 self.src_count += 1
                 timer.set(self.speed_animation)
                 timer.start()
         timer.onTimeout = timer_timeout
+        self.mainTimer.stop()
         timer.start()
-
-    # change right and left
-    def change_direct(self):
-        if self.dir == 0:
-            self.dir = 1
-        elif self.dir == 1:
-            self.dir = 0
-        else:
-            print("error: value of direct not in range")
-    
-    # set right and left
-    def set_direct(self, d):
-        if d == -1:
-            self.dir = 1
-        elif d == 1:
-            self.dir = 0
-        else:
-            pass
-
-    def get_direct(self):
-        return self.direction[self.dir]
-
 
 class PROFESSOR(gameObject):
     def __init__(self, scene, i, j):
         super().__init__('image/stage/PROFESSOR/Professor_idle1.png', scene, i, j, 'PROFESSOR')
         self.animate()
 
-    #animation code complete
     def animate(self):
         timer = Timer(self.speed_animation)
         self.src_count = 1
@@ -207,11 +181,9 @@ class PROFESSOR(gameObject):
         timer.onTimeout = timer_timeout
         timer.start()
 
-
 class KEY(gameObject):
     def __init__(self, scene, i, j):
         super().__init__('image/stage/KEY/Key1.png', scene, i, j, 'KEY')
-
 
 class DOOR(gameObject):
     def __init__(self, scene, i, j):
@@ -220,11 +192,9 @@ class DOOR(gameObject):
     def open(self):
         self.hide()
 
-
 class DESK(gameObject):
     def __init__(self, scene, i, j):
         super().__init__('image/stage/DESK/Desk.png', scene, i, j, 'DESK')
-
 
 class BOOKS(gameObject):
     def __init__(self, scene, i, j):
@@ -237,15 +207,14 @@ class BOOKS(gameObject):
         def timer_timeout():
             self.setImage('image/stage/BOOKS/Book_Crash'+str(self.src_count)+'.png')
             if self.src_count >= 3:
-                self.src_count = 1
+                self.hide()
+                return 0
             else:
                 self.src_count += 1
                 timer.set(self.speed_animation)
                 timer.start()
         timer.onTimeout = timer_timeout
         timer.start()
-        self.hide()
-
 
 class SPIKE(gameObject):
     def __init__(self, scene, i, j, active):
@@ -263,12 +232,10 @@ _ = button_back(helpScene)
 ending = Scene('ending', 'image/ending/background.png')
 _ = button_main(ending)
 
+
 # stage
-
-
 def getLocation(i, j):
     return 350 + 65 * j, 560 - 65 * i
-
 
 class Stage(Scene):
     # gameObjects = ['GROUND', 'WALL', 'PROFESSOR', 'KEY', 'DOOR', 'DESK', 'BOOKS', 'SPIKE_ACTIVE', 'SPIKE_INACTIVE', 'SPIKE_DESK']
@@ -362,7 +329,7 @@ class Stage(Scene):
             self.setImage('image/stage/background/' + str(n) + '.png')
             self.action(0)
             self.stageDetails[0]['keysInHand'] = 0
-            self.objects['player'].move(0, 0, *s['player'], 1)
+            self.objects['player'].move(*s['player'])
             self.objects['player'].show()
             for _ in range(len(self.objects['objects'])):
                 self.objects['objects'][-1].hide()
@@ -404,7 +371,11 @@ class Stage(Scene):
 
     def failed(self):
         self.objects['player'].fail()
-        self.setStage(self.stageDetails[0]['currentStage'])
+        t = Timer(1)
+        def instant():
+            self.setStage(self.stageDetails[0]['currentStage'])
+        t.onTimeout = instant
+        t.start()
 
     def getObjectIndex(self, i, j, objectType):
         for idx, v in enumerate(self.objects['objects']):
@@ -426,14 +397,11 @@ class Stage(Scene):
         self.objects['actionsRemained'][1].set(a % 10)
 
     def move(self, di, dj):
-        # c = self.stageDetails[0]['currentStage']
         s = self.stageMap
         m = s['object']
         p = self.objects['player']
         o = self.objects['objects']
 
-        # move have to previous position (fr variabel = from position)
-        fr = p.position
         to = (p.position[0] + di, p.position[1] + dj)
         tt = (p.position[0] + 2 * di, p.position[1] + 2 * dj)
 
@@ -448,7 +416,7 @@ class Stage(Scene):
 
             if f == 0 or f == 7 or f == 8:
                 s['player'] = to
-                p.move(*fr, *to, dj)
+                p.move(*to)
             elif f == 1:
                 pass
             elif f == 2:
@@ -456,7 +424,7 @@ class Stage(Scene):
             elif f == 3:
                 k = self.getObjectIndex(*to, 'KEY')
                 s['player'] = to
-                p.move(*fr, *to, dj)
+                p.move(*to)
                 m[to[0]][to[1]] = 0
                 o[k].pick()
                 self.stageDetails[0]['keysInHand'] += 1
@@ -467,10 +435,10 @@ class Stage(Scene):
                     o[d].open()
                     m[to[0]][to[1]] = 0
                     s['player'] = to
-                    p.move(*fr, *to, dj)
+                    p.move(*to)
             elif f == 5:
                 d = self.getObjectIndex(*to, 'DESK')
-                p.kick()
+                p.kick(*to)
                 if ff == 0:
                     m[to[0]][to[1]] = 0
                     m[tt[0]][tt[1]] = 5
@@ -481,21 +449,23 @@ class Stage(Scene):
                     o[d].move(*tt)
             elif f == 6:
                 b = self.getObjectIndex(*to, 'BOOKS')
-                m[to[0]][to[1]] = 0
-                p.kick()
+                p.kick(*to)
                 if ff == 1:
+                    m[to[0]][to[1]] = 0
                     o[b].destroy()
                 elif ff == 7:
                     m[tt[0]][tt[1]] = 6
+                    m[to[0]][to[1]] = 0
                     o[b].move(*tt)
                     o[b].destroy()
-                else:
+                elif ff != 6:
                     m[tt[0]][tt[1]] = 6
+                    m[to[0]][to[1]] = 0
                     o[b].move(*tt)
             elif f == 9:
                 d = self.getObjectIndex(*to, 'DESK')
                 k = self.getObjectIndex(*to, 'SPIKE')
-                p.kick()
+                p.kick(*to)
                 if ff == 0:
                     m[to[0]][to[1]] = 8 - o[k].active
                     m[tt[0]][tt[1]] = 5
@@ -525,8 +495,7 @@ class Stage(Scene):
             elif key == 4 or key == 83:
                 self.move(0, 1)
             elif key == 18:
-                self.objects['player'].fail()
-                self.setStage(self.stageDetails[0]['currentStage']) 
+                self.failed()
 
 
 stage = Stage()
