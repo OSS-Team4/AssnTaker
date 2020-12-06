@@ -103,9 +103,6 @@ class gameObject(Object):
                 t.start()
         t.onTimeout = timer_timeout
         t.start()
-    
-    def printpos(self):
-        print(self.position)
 
 class PLAYER(gameObject):
     def __init__(self, scene, i, j):
