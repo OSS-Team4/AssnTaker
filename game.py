@@ -93,6 +93,9 @@ class gameObject(Object):
             self.locate(self.scene, *getLocation(*self.position))
         t.onTimeout = l
         t.start()
+    
+    def printpos(self):
+        print(self.position)
 
 class PLAYER(gameObject):
     def __init__(self, scene, i, j):
@@ -121,7 +124,31 @@ class PLAYER(gameObject):
             self.direction = 'Left'
         elif self.position[1] < j:
             self.direction = 'Right'
-        super().move(i, j)
+        self.d = (i-self.position[0], j-self.position[1])
+        if self.d[0] > 1 or self.d[0] < -1 or self.d[1] > 1 or self.d[1] < -1 :
+            super().move(i, j)
+            return 0
+
+        timer = Timer(0)
+        self.src_count_move = 1
+        def timer_timeout():
+            self.setImage('image/stage/PLAYER/Player_Move'+str(self.src_count_move) + '_' + self.direction + '.png')
+            self.locate(self.scene, *getLocation(self.position[0]+self.d[0]/3*self.src_count_move, self.position[1]+self.d[1]/3*self.src_count_move))
+            if self.src_count_move >= 3:
+                self.setImage('image/stage/PLAYER/Player_Idle1_' + self.direction + '.png')
+                self.position = (i, j)
+                self.locate(self.scene, *getLocation(*self.position))
+                self.mainTimer.start()
+                return 0
+            else:
+                self.src_count_move += 1
+                timer.set(self.speed_animation-0.09)
+                timer.start()
+        timer.onTimeout = timer_timeout
+        self.mainTimer.stop()
+        timer.start()
+        
+        #super().move(i, j)
 
     # animation code ongoing
     def kick(self, i, j):
@@ -148,7 +175,7 @@ class PLAYER(gameObject):
         # async
         # animation code here
         timer = Timer(self.speed_animation)
-        self.src_count_fail = 1
+        self.src_count = 1
         def timer_timeout():
             self.setImage('image/stage/PLAYER/Player_Over'+str(self.src_count) + '_' + self.direction + '.png')
             if self.src_count >= 5:
@@ -235,7 +262,7 @@ _ = button_main(ending)
 
 # stage
 def getLocation(i, j):
-    return 350 + 65 * j, 560 - 65 * i
+    return int(350 + 65 * j), int(560 - 65 * i)
 
 class Stage(Scene):
     # gameObjects = ['GROUND', 'WALL', 'PROFESSOR', 'KEY', 'DOOR', 'DESK', 'BOOKS', 'SPIKE_ACTIVE', 'SPIKE_INACTIVE', 'SPIKE_DESK']
