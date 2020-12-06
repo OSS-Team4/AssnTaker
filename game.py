@@ -125,18 +125,15 @@ class PLAYER(gameObject):
         elif self.position[1] < j:
             self.direction = 'Right'
         self.d = (i-self.position[0], j-self.position[1])
-        if self.d[0] > 1 or self.d[0] < -1 or self.d[1] > 1 or self.d[1] < -1 :
-            super().move(i, j)
-            return 0
+        self.position = (i, j)
 
         timer = Timer(0)
         self.src_count_move = 1
         def timer_timeout():
-            self.setImage('image/stage/PLAYER/Player_Move'+str(self.src_count_move) + '_' + self.direction + '.png')
-            self.locate(self.scene, *getLocation(self.position[0]+self.d[0]/3*self.src_count_move, self.position[1]+self.d[1]/3*self.src_count_move))
+            self.setImage('image/stage/PLAYER/Player_Move' + str(self.src_count_move) + '_' + self.direction + '.png')
+            self.locate(self.scene, *getLocation(self.position[0] - self.d[0] / 3 * (3 - self.src_count_move), self.position[1] - self.d[1] / 3 * (3 - self.src_count_move)))
             if self.src_count_move >= 3:
                 self.setImage('image/stage/PLAYER/Player_Idle1_' + self.direction + '.png')
-                self.position = (i, j)
                 self.locate(self.scene, *getLocation(*self.position))
                 self.mainTimer.start()
                 return 0
