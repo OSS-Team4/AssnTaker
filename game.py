@@ -87,11 +87,21 @@ class gameObject(Object):
         self.speed_animation = 0.15
 
     def move(self, i, j):
-        self.position = i, j        
-        t = Timer(0.01)
-        def l():
-            self.locate(self.scene, *getLocation(*self.position))
-        t.onTimeout = l
+        self.d = i - self.position[0], j - self.position[1]
+        self.position = i, j
+
+        t = Timer(0)
+        self.src_count_move = 1
+        def timer_timeout():
+            self.locate(self.scene, *getLocation(self.position[0] - self.d[0] / 3 * (3 - self.src_count_move), self.position[1] - self.d[1] / 3 * (3 - self.src_count_move)))
+            if self.src_count_move >= 3:
+                self.locate(self.scene, *getLocation(*self.position))
+                return 0
+            else:
+                self.src_count_move += 1
+                t.set(self.speed_animation - 0.09)
+                t.start()
+        t.onTimeout = timer_timeout
         t.start()
     
     def printpos(self):
